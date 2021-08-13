@@ -18,6 +18,7 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Welcome", tabName = "tab_welcome", icon = icon("paper-plane")),
       menuItem("Inputs", tabName = "tab_inputs", icon = icon("i-cursor")),
+      menuItem("Select", tabName = "tab_select", icon = icon("hand-pointer")),
       menuItem("Map", tabName = "tab_map", icon = icon("map-marker-alt")),
       menuItem("Heatmaps", tabName = "tab_heat", icon = icon("layer-group")),
       menuItem("Time Series", tabName = "tab_ts", icon = icon("chart-line"))
@@ -100,7 +101,8 @@ ui <- dashboardPage(
               "You will need to input the location data as a boundary box (W, S, E, N).
               The easiest way to do so is to visit", tags$a(href="http://bboxfinder.com/", "bboxfinder"),
               "and using the drawing tools on the site to draw a small box of interest.
-              At the bottom of the screen will be coordinates labeled", tags$b("'Box'"), "which you can copy and paste below:",
+              At the bottom of the screen will be coordinates labeled",
+              tags$b("'Box'"), "which you can copy and paste below:",
               textInput(
                 "input_coords",
                 label = "Boundary box:",
@@ -166,7 +168,7 @@ ui <- dashboardPage(
               tags$br(),
               plotOutput("output_pasmap", height = "800px"),
               tags$br(),
-              "Map look good? Press the button below to load the data!",
+              "Map look good? Press the button below to load the data, and head on over to the 'select' tab!",
               tags$br(),
               actionButton(
                 inputId = "action_pat",
@@ -175,22 +177,56 @@ ui <- dashboardPage(
                 class = "btn-info"
               ),
               tags$br(),
-              "Your data is ready once a table appears below:",
-              tags$br(),
-              tableOutput("output_table_results")
+              "Next, go to the 'selects' tab.",
             )
           )
         )
       ),
       tabItem(
-        tabName = "tab_map",
+        tabName = "tab_select",
         fluidRow(
           column(
             width = 4,
             box(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = h3("Inputs"),
-              "blah"
+              title = h3("Select interest"),
+              "Select the values and variables to be plotted",
+              radioButtons(
+                inputId = "input_set",
+                label = "Choose the data set to plot",
+                choices = list(
+                  "Full" = 1,
+                  "Hourly, by day" = 2,
+                  "Daily" = 3,
+                  "Diurnal" = 4
+                ),
+                selected = 2
+              ),
+              selectInput(
+                inputId = "input_var",
+                label = "Choose the variable of interest to plot",
+                choices = july_api_daily %>% slice(1) %>% select_if(is.numeric) %>% names(),
+                selected = "pm25_atm"
+              ),
+              actionButton(
+                inputId = "action_map",
+                label = "Map the data!",
+                icon = icon("hand-point-right"),
+                class = "btn-info"
+              ),
+              tags$br()
+            )
+          ),
+          column(
+            width = 6,
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+              title = h3("Preview"),
+              "If your data has successfully loaded, a count of observations will appear here:",
+              tags$br(),
+              plotOutput("output_map", height = "800px"),
+              tags$br(),
+              tableOutput("output_table_results")
             )
           )
         )
@@ -295,26 +331,47 @@ server <- function(input, output){
     )
   })
   
-  data_meta <- reactive({
+  data_meta <- eventReactive(input$action_pat, {
     wrangle_meta(results()$raw_meta)
   })
   
-  data_full <- reactive({
-    wrangle_data(
-      raw_pm_data = results()$raw_data,
-      raw_meta_data = results()$raw_meta,
-      drop_high = FALSE
+  data_full <- eventReactive(input$action_pat, {
+    withProgress(
+      message = "Wrangling raw data!",
+      wrangle_data(
+        raw_pm_data = results()$raw_data,
+        raw_meta_data = results()$raw_meta,
+        drop_high = FALSE
+      )
     )
   })
   
-  data_hourly <- reactive({ apply_functions(data_full(), TRUE, TRUE, FALSE, FALSE) })
-  data_diurnal <- reactive({ apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
-  data_daily <- reactive({ apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  data_hourly <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, TRUE, FALSE, FALSE) })
+  data_diurnal <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  data_daily <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  
+  dataset <- reactive({
+    if (input$input_set == 1) {data_full()}
+    else if (input$input_set == 2) {data_hourly()}
+    else if (input$input_set == 3) {data_daily()}
+    else if (input$input_set == 4) {data_diurnal()}
+  })
+  
+  # varaible_of_interst <- reactive({input$input_var})
   
   output$output_table_results <- renderTable({
-    left_join(data_full(), data_meta()) %>% 
-      count(label) %>% 
+    left_join(dataset(), data_meta()) %>%
+      count(label) %>%
       rename(observations = n)
+  })
+  
+  
+  output$output_map <- eventReactive(input$action_map, {
+    map_stad(
+      dataset = dataset(),
+      variable_of_interest = as.name(input$input_var),
+      location_data = data_meta()
+    )
   })
 }
 
