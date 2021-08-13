@@ -6,6 +6,7 @@ library(shinydashboard)
 library(tidyverse)
 library(AirVizR)
 library(stringr)
+# library(DT)
 # library(AirSensor)
 
 # UI ----------------------------------------------------------------------
@@ -141,9 +142,11 @@ ui <- dashboardPage(
                 value = NULL
               ),
               tags$hr(),
-              HTML("Press the button below once the area and dates of interest have been entered!
-                 The data gathering process will take a few moments.
-                 When complete, you will see a preview of the data, and analysis can be conducted in the other tabs.<br><br>"),
+              "Press the button below once the area and dates of interest have been entered!
+              The data gathering process will take a few moments.
+              When complete, you will see a preview of the data, and analysis can be conducted in the other tabs.",
+              tags$br(),
+              tags$br(),
               actionButton(
                 inputId = "action_pasmap",
                 label = "Get PAS!",
@@ -170,7 +173,11 @@ ui <- dashboardPage(
                 label = "Get PAT!",
                 icon = icon("hand-point-right"),
                 class = "btn-info"
-              )
+              ),
+              tags$br(),
+              "Your data is ready once a table appears below:",
+              tags$br(),
+              tableOutput("output_table_results")
             )
           )
         )
@@ -215,15 +222,18 @@ server <- function(input, output){
   })
   
   pas_area <- eventReactive(input$action_pasmap, {
-    get_area_pas(
-      west = (coord_list()[1]),
-      south = (coord_list()[2]),
-      east = (coord_list()[3]),
-      north = (coord_list()[4]),
-      datestamp = (input$input_dates[2]),
-      startdate = (input$input_dates[1]),
-      state_code = statecode(),
-      labels = labelcode()
+    withProgress(
+      message = "Generating PAS!",
+      get_area_pas(
+        west = (coord_list()[1]),
+        south = (coord_list()[2]),
+        east = (coord_list()[3]),
+        north = (coord_list()[4]),
+        datestamp = (input$input_dates[2]),
+        startdate = (input$input_dates[1]),
+        state_code = statecode(),
+        labels = labelcode()
+      )
     )
   })
   
@@ -244,28 +254,67 @@ server <- function(input, output){
         filter(location != "inside")
     }
     
-    ggmap::qmplot(
-      longitude,
-      latitude,
-      color = location,
-      data = pas_area_temp,
-      main = paste("Number of monitors:",
-                   nrow(pas_area_temp))) +
-    theme(legend.position = "bottom")
+    withProgress(
+      message = "Generating map!",
+      ggmap::qmplot(
+        longitude,
+        latitude,
+        color = location,
+        data = pas_area_temp,
+        main = paste("Number of monitors:",
+                     nrow(pas_area_temp))) +
+      theme(legend.position = "bottom")
+    )
     
   })
   
   output$output_pasmap <- renderPlot({plot_pasmap()})
   
   pat_ids <- eventReactive(input$action_pat, {
-    withProgress(message = "Gathering data!",
-                 detail = "This will be the longest step.",
-                 get_ids(
-                   pas = pas_area(),
-                   outside = input$input_outside,
-                   inside = input$input_inside
-                 )
+    withProgress(
+      message = "Gathering IDs!",
+      detail = "This shouldn't take too long.",
+      get_ids(
+        pas = pas_area(),
+        outside = input$input_outside,
+        inside = input$input_inside
+      )
     )
+  })
+  
+  results <- eventReactive(input$action_pat, {
+    withProgress(
+      message = "Collecting data!",
+      detail = "This will be the longest step. Yes, the progress bar is slow.",
+      get_area_pat(
+        id_list = pat_ids(),
+        pas_input = pas_area(),
+        startdate = input$input_dates[1],
+        enddate = input$input_dates[2]
+      )
+    )
+  })
+  
+  data_meta <- reactive({
+    wrangle_meta(results()$raw_meta)
+  })
+  
+  data_full <- reactive({
+    wrangle_data(
+      raw_pm_data = results()$raw_data,
+      raw_meta_data = results()$raw_meta,
+      drop_high = FALSE
+    )
+  })
+  
+  data_hourly <- reactive({ apply_functions(data_full(), TRUE, TRUE, FALSE, FALSE) })
+  data_diurnal <- reactive({ apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  data_daily <- reactive({ apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  
+  output$output_table_results <- renderTable({
+    left_join(data_full(), data_meta()) %>% 
+      count(label) %>% 
+      rename(observations = n)
   })
 }
 
