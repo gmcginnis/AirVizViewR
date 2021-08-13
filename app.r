@@ -5,7 +5,8 @@ library(shiny)
 library(shinydashboard)
 library(tidyverse)
 library(AirVizR)
-library(AirSensor)
+library(stringr)
+# library(AirSensor)
 
 # UI ----------------------------------------------------------------------
 
@@ -134,23 +135,25 @@ ui <- dashboardPage(
 
 server <- function(input, output){
   
-  setArchiveBaseUrl("https://airsensor.aqmd.gov/PurpleAir/v1/")
+  # setArchiveBaseUrl("https://airsensor.aqmd.gov/PurpleAir/v1/")
+  
+  output$output_pasmap <- renderPlot(example(ts_line))
   
   plot_pasmap <- eventReactive(input$action_pasmap, {
-    pas <- pas_load(
-      datestamp = inputs$input_dates[1],
-      archival = TRUE
-    ) %>% 
-      pas_filterArea(
-        w = "a",
-        e = "e",
-        s = "s",
-        n = "n"
-        
-      )
+    
+    coord_list <- unlist(str_split(input$input_coords, ",")) %>% str_replace(" ", "")
+    
+    get_area_pas(
+      west = (coord_list[1]),
+      south = (coord_list[2]),
+      east = (coord_list[3]),
+      north = (coord_list[4]),
+      datestamp = (inputs$input_dates[2]),
+      startdates = (inputs$input_dates[1])
+    )
   })
   
-  output$output_pasmap <- renderPlot({plot_pasmap()})
+  # output$output_pasmap <- renderPlot({plot_pasmap()})
 }
 
 # -------
