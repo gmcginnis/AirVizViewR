@@ -3,11 +3,81 @@
 # devtools::install_github("gmcginnis/AirVizR")
 library(shiny)
 library(shinydashboard)
+library(shinyWidgets)
 library(tidyverse)
 library(AirVizR)
 library(stringr)
 # library(DT)
 # library(AirSensor)
+
+box_settings <- box(
+  width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+  title = h3("Variables"),
+  "Select the values and variables to be plotted",
+  # varSelectInput(
+  selectInput(
+    inputId = "input_var",
+    label = "Choose the variable of interest to plot",
+    # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
+    choices = july_api_daily %>% slice(1) %>% select_if(is.numeric) %>% names(),
+    selected = "pm25_atm"
+  ),
+  tags$hr(),
+  radioButtons(
+    inputId = "input_set",
+    label = "Choose the data set to plot",
+    choices = list(
+      "Full (maximum granularity)" = 1,
+      "Hourly (by day)" = 2,
+      "Daily" = 3,
+      "Diurnal (24 hour cycle)" = 4
+    ),
+    selected = 2
+  ),
+  tags$hr(),
+  radioButtons(
+    inputId = "input_viz",
+    label = "Select the visualization of interest!",
+    choices = list(
+      "Map" = 1,
+      "Heatmap (single)" = 2,
+      "Heatmap (multiple)" = 3,
+      "Time series" = 4
+    ),
+    selected = 1
+  )
+  #               actionButton(
+  #                 inputId = "action_map",
+  #                 label = "Map the data!",
+  #                 icon = icon("hand-point-right"),
+  #                 class = "btn-info"
+  #               )
+)
+
+box_more <- box(
+  width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+  title = h3("Additional filters"),
+  checkboxInput(
+    inputId = "input_drop",
+    label = "Drop incomplete sets",
+    value = TRUE
+  ),
+  tags$hr(),
+  h4("Locations"),
+  selectInput(
+    inputId = "input_site",
+    label = "For a heatmap of type 'single', select 1 site to visualize:",
+    choices = NULL
+  ),
+  pickerInput(
+    inputId = "input_sites",
+    label = "For all other visualization types, select the sites of interest:",
+    choices = c(),
+    selected = c(),
+    multiple = TRUE,
+    options = list(`actions-box` = TRUE)
+  )
+)
 
 # UI ----------------------------------------------------------------------
 
@@ -16,12 +86,15 @@ ui <- dashboardPage(
   dashboardHeader(title = "AirVizViewR"),
   dashboardSidebar(
     sidebarMenu(
+      id = "id_tabs",
       menuItem("Welcome", tabName = "tab_welcome", icon = icon("paper-plane")),
       menuItem("Inputs", tabName = "tab_inputs", icon = icon("i-cursor")),
-      menuItem("Select", tabName = "tab_select", icon = icon("hand-pointer")),
-      menuItem("Map", tabName = "tab_map", icon = icon("map-marker-alt")),
-      menuItem("Heatmaps", tabName = "tab_heat", icon = icon("layer-group")),
-      menuItem("Time Series", tabName = "tab_ts", icon = icon("chart-line"))
+      menuItem("Visualize", tabName = "tab_viz", icon = icon("hand-pointer"))
+      # menuItem("Select", tabName = "tab_select", icon = icon("hand-pointer")),
+#       menuItem("Select", tabName = "tab_map", icon = icon("map-marker-alt")),
+#       menuItem("Large heatmap", tabName = "tab_heatmap", icon = icon("barcode")),
+#       menuItem("Single site heatmap", tabName = "tab_heatmap_single", icon = icon("layer-group")),
+#       menuItem("Time Series", tabName = "tab_ts", icon = icon("chart-line"))
     )
   ),
   dashboardBody(
@@ -47,8 +120,7 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               title = "How to use this dashboard",
               "Go to the \"Inputs\" tab first to provide the area and dates ranges of interest.
-              Once the data has loaded, visit any of the other tabs
-              to construct visualizations, following any additional instructions on the respective pages."
+              Once the data has loaded, visit the \"Visualize\" tab to construct visualizations."
             )
           ),
           column(
@@ -163,12 +235,16 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               title = "PAS",
               "Once you have entered inputs and pressed the 'Get PAS' button, a map will appear shortly after
-              to display the monitors that match the inputs of interest. If there are more than 100 monitrs displayed,
+              to display the monitors that match the inputs of interest. If there are more than 100 monitors displayed,
               or if your date ranges are quite lengthy, consider applying more filters, as data loading can take the longest amount of time.",
               tags$br(),
-              plotOutput("output_pasmap", height = "800px"),
-              tags$br(),
-              "Map look good? Press the button below to load the data, and head on over to the 'select' tab!",
+              plotOutput("output_pasmap", height = "500px"),
+              tags$br()
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+              title = "Next steps",
+              "Map look good? Press the button below to load the data!",
               tags$br(),
               actionButton(
                 inputId = "action_pat",
@@ -177,59 +253,83 @@ ui <- dashboardPage(
                 class = "btn-info"
               ),
               tags$br(),
-              "Next, go to the 'selects' tab.",
+              "Once it has loaded, a table will appear below, and you can plot on any of the other tabs.",
+              tags$hr(),
+              tableOutput("output_table_results")
             )
           )
         )
       ),
       tabItem(
-        tabName = "tab_select",
+        tabName = "tab_viz",
         fluidRow(
           column(
             width = 4,
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = h3("Select interest"),
-              "Select the values and variables to be plotted",
-              radioButtons(
-                inputId = "input_set",
-                label = "Choose the data set to plot",
-                choices = list(
-                  "Full" = 1,
-                  "Hourly, by day" = 2,
-                  "Daily" = 3,
-                  "Diurnal" = 4
-                ),
-                selected = 2
-              ),
-              selectInput(
-                inputId = "input_var",
-                label = "Choose the variable of interest to plot",
-                choices = july_api_daily %>% slice(1) %>% select_if(is.numeric) %>% names(),
-                selected = "pm25_atm"
-              ),
-              actionButton(
-                inputId = "action_map",
-                label = "Map the data!",
-                icon = icon("hand-point-right"),
-                class = "btn-info"
-              ),
-              tags$br()
-            )
+            box_settings,
+            box_more
           ),
           column(
             width = 6,
             box(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = h3("Preview"),
-              "If your data has successfully loaded, a count of observations will appear here:",
-              tags$br(),
-              plotOutput("output_map", height = "800px"),
-              tags$br(),
-              tableOutput("output_table_results")
+              title = h3("Visualizaation"),
+              plotOutput("output_viz", height = "800px")
             )
           )
         )
+#       ),
+#       tabItem(
+#         tabName = "tab_heatmap_single",
+#         fluidRow(
+#           column(
+#             width = 4,
+#             box_single
+#           ),
+#           column(
+#             width = 6,
+#             box(
+#               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+#               title = h3("Heatmap, single site"),
+#               plotOutput("output_heatmap_single", height = "800px")
+#             )
+#           )
+#         )
+#       ),
+#       tabItem(
+#         tabName = "tab_heatmap",
+#         fluidRow(
+#           column(
+#             width = 4,
+#             box_settings,
+#             box_multi
+#           ),
+#           column(
+#             width = 6,
+#             box(
+#               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+#               title = h3("Heatmap"),
+#               plotOutput("output_heatmap", height = "800px")
+#             )
+#           )
+#         )
+#       ),
+#       tabItem(
+#         tabName = "tab_ts",
+#         fluidRow(
+#           column(
+#             width = 4,
+#             box_settings,
+#             box_multi
+#           ),
+#           column(
+#             width = 6,
+#             box(
+#               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+#               title = h3("Time series"),
+#               plotOutput("output_line", height = "800px")
+#             )
+#           )
+#         )
       )
     )
   )
@@ -237,7 +337,7 @@ ui <- dashboardPage(
 
 # SERVER ------------------------------------------------------------------
 
-server <- function(input, output){
+server <- function(session, input, output){
   
   coord_list <- eventReactive(input$action_pasmap, {
     unlist(str_split(input$input_coords, ",")) %>%
@@ -295,11 +395,12 @@ server <- function(input, output){
       ggmap::qmplot(
         longitude,
         latitude,
-        color = location,
+        geom = "blank",
+        darken = c(0.5, "black"),
         data = pas_area_temp,
-        main = paste("Number of monitors:",
-                     nrow(pas_area_temp))) +
-      theme(legend.position = "bottom")
+        main = paste("Number of monitors:", nrow(pas_area_temp))) +
+        geom_point(aes(fill = location), size = 3, color = "white", shape = 21, alpha = 0.95) +
+        theme(legend.position = "bottom")
     )
     
   })
@@ -335,6 +436,12 @@ server <- function(input, output){
     wrangle_meta(results()$raw_meta)
   })
   
+  output$output_table_results <- renderTable({
+    left_join(dataset(), data_meta()) %>%
+      count(label) %>%
+      rename(observations = n)
+  })
+  
   data_full <- eventReactive(input$action_pat, {
     withProgress(
       message = "Wrangling raw data!",
@@ -350,29 +457,90 @@ server <- function(input, output){
   data_diurnal <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
   data_daily <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
   
+  observe({
+    updatePickerInput(
+      session,
+      "input_sites",
+      choices = data_meta() %>% pull(label),
+      selected = data_meta() %>% pull(label)
+    )
+  })
+  
   dataset <- reactive({
     if (input$input_set == 1) {data_full()}
     else if (input$input_set == 2) {data_hourly()}
     else if (input$input_set == 3) {data_daily()}
     else if (input$input_set == 4) {data_diurnal()}
+#     if (input$input_set == 1) {df_temp <- data_full()}
+#     else if (input$input_set == 2) {df_temp <- data_hourly()}
+#     else if (input$input_set == 3) {df_temp <- data_daily()}
+#     else if (input$input_set == 4) {df_temp <- data_diurnal()}
+#     filter_df(df_temp, var = label, include = input$input_sites, location_data = data_meta())
   })
   
-  # varaible_of_interst <- reactive({input$input_var})
-  
-  output$output_table_results <- renderTable({
-    left_join(dataset(), data_meta()) %>%
-      count(label) %>%
-      rename(observations = n)
-  })
-  
-  
-  output$output_map <- eventReactive(input$action_map, {
+  ## MAP
+  viz_map <- reactive({
+  # output$output_map <- renderPlot({
     map_stad(
+      variable_of_interest = pm25_atm,
       dataset = dataset(),
-      variable_of_interest = as.name(input$input_var),
       location_data = data_meta()
     )
   })
+  
+  ## HEATMAP
+  viz_heatmap <- reactive({
+  # output$output_heatmap <- renderPlot({
+    heatmap_cross(
+      variable_of_interest = pm25_atm,
+      dataset = dataset(),
+      location_data = data_meta()
+    )
+  })
+  
+  ## SINGLE HEATMAP
+  observe({
+    updateSelectInput(
+      session,
+      "input_site",
+      choices = data_meta() %>%
+        select(label) %>%
+        unique() %>%
+        as.list(),
+      selected = 1
+    )
+  })
+  
+  viz_heatmap_single <- reactive({
+  # output$output_heatmap_single <- renderPlot({
+    heatmap_single(
+      variable_of_interest = pm25_atm,
+      site_of_interest = input$input_site,
+      dataset = data_hourly(),
+      location_data = data_meta()
+    )
+  })
+  
+  
+  ## LINE
+  viz_line <- reactive({
+  # output$output_line <- renderPlot({
+    ts_line(
+      variable_of_interest = pm25_atm,
+      dataset = dataset(),
+      location_data = data_meta(),
+      add_points = TRUE
+    )
+  })
+  
+  output_plot <- reactive({
+    if (input$input_viz == 1) {viz_map()}
+    else if (input$input_viz == 2) {viz_heatmap_single()}
+    else if (input$input_viz == 3) {viz_heatmap()}
+    else if (input$input_viz == 4) {viz_line()}
+  })
+
+  output$output_viz <- renderPlot({output_plot()})
 }
 
 # -------
