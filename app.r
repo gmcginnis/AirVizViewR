@@ -12,17 +12,17 @@ library(stringr)
 
 box_settings <- box(
   width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-  title = h3("Variables"),
-  "Select the values and variables to be plotted",
-  # varSelectInput(
-  selectInput(
-    inputId = "input_var",
-    label = "Choose the variable of interest to plot",
-    # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
-    choices = july_api_daily %>% slice(1) %>% select_if(is.numeric) %>% names(),
-    selected = "pm25_atm"
-  ),
-  tags$hr(),
+  title = "Variables",
+#   "Select the values and variables to be plotted",
+#   # varSelectInput(
+#   selectInput(
+#     inputId = "input_var",
+#     label = "Choose the variable of interest to plot",
+#     # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
+#     choices = july_api_daily %>% slice(1) %>% select_if(is.numeric) %>% names(),
+#     selected = "pm25_atm"
+#   ),
+#   tags$hr(),
   radioButtons(
     inputId = "input_set",
     label = "Choose the data set to plot",
@@ -55,12 +55,12 @@ box_settings <- box(
 )
 
 box_more <- box(
-  width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-  title = h3("Additional filters"),
+  width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE,
+  title = "Additional filters",
   checkboxInput(
     inputId = "input_drop",
     label = "Drop incomplete sets",
-    value = TRUE
+    value = FALSE
   ),
   tags$hr(),
   h4("Locations"),
@@ -164,8 +164,7 @@ ui <- dashboardPage(
             width = 4,
             box(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = h3("Inputs"),
-              h3("Required"),
+              title = "Required inputs",
               "The following inputs are required to get the PurpleAir data.
               Because this dashboard is designed for visualizing more than one monitors' data,
               errors might occur if filters return only one matching monitor.",
@@ -178,7 +177,8 @@ ui <- dashboardPage(
               textInput(
                 "input_coords",
                 label = "Boundary box:",
-                value = "-122.854, 45.4, -122.58, 45.6"
+                value = "-122.65,45.48,-122.57,45.52"
+                # value = "-122.854, 45.4, -122.58, 45.6"
               ),
               h4("Dates"),
               dateRangeInput(
@@ -197,9 +197,12 @@ ui <- dashboardPage(
                 "input_inside",
                 label = "Indoor monitors",
                 value = TRUE
-              ),
-              tags$hr(),
-              h3("Optional"),
+              )
+            ),
+            box(
+              collapsible = TRUE, collapsed = TRUE,
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+              title = "Optional inputs",
               h4("Labels"),
               "Filter the data set to only include monitors tagged with specific label(s).
               If using more than one, separate with commas and a space.",
@@ -214,11 +217,13 @@ ui <- dashboardPage(
                 "input_statecode",
                 label = "State code:",
                 value = NULL
-              ),
-              tags$hr(),
+              )
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               "Press the button below once the area and dates of interest have been entered!
               The data gathering process will take a few moments.
-              When complete, you will see a preview of the data, and analysis can be conducted in the other tabs.",
+              When complete, you will see a preview of the accessible data.",
               tags$br(),
               tags$br(),
               actionButton(
@@ -235,8 +240,8 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               title = "PAS",
               "Once you have entered inputs and pressed the 'Get PAS' button, a map will appear shortly after
-              to display the monitors that match the inputs of interest. If there are more than 100 monitors displayed,
-              or if your date ranges are quite lengthy, consider applying more filters, as data loading can take the longest amount of time.",
+              to display the monitors that match the inputs of interest. If there are more than 20 monitors displayed,
+              or if your date ranges are quite lengthy, consider applying more filters, as data loading can take a long time.",
               tags$br(),
               plotOutput("output_pasmap", height = "500px"),
               tags$br()
@@ -246,12 +251,15 @@ ui <- dashboardPage(
               title = "Next steps",
               "Map look good? Press the button below to load the data!",
               tags$br(),
-              actionButton(
+              shinyjs::useShinyjs(),
+              shinyjs::disabled(actionButton(
+              # actionButton(
                 inputId = "action_pat",
                 label = "Get PAT!",
                 icon = icon("hand-point-right"),
                 class = "btn-info"
-              ),
+              # ),
+              )),
               tags$br(),
               "Once it has loaded, a table will appear below, and you can plot on any of the other tabs.",
               tags$hr(),
@@ -272,64 +280,11 @@ ui <- dashboardPage(
             width = 6,
             box(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = h3("Visualizaation"),
+              title = h3("Visualization"),
               plotOutput("output_viz", height = "800px")
             )
           )
         )
-#       ),
-#       tabItem(
-#         tabName = "tab_heatmap_single",
-#         fluidRow(
-#           column(
-#             width = 4,
-#             box_single
-#           ),
-#           column(
-#             width = 6,
-#             box(
-#               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-#               title = h3("Heatmap, single site"),
-#               plotOutput("output_heatmap_single", height = "800px")
-#             )
-#           )
-#         )
-#       ),
-#       tabItem(
-#         tabName = "tab_heatmap",
-#         fluidRow(
-#           column(
-#             width = 4,
-#             box_settings,
-#             box_multi
-#           ),
-#           column(
-#             width = 6,
-#             box(
-#               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-#               title = h3("Heatmap"),
-#               plotOutput("output_heatmap", height = "800px")
-#             )
-#           )
-#         )
-#       ),
-#       tabItem(
-#         tabName = "tab_ts",
-#         fluidRow(
-#           column(
-#             width = 4,
-#             box_settings,
-#             box_multi
-#           ),
-#           column(
-#             width = 6,
-#             box(
-#               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-#               title = h3("Time series"),
-#               plotOutput("output_line", height = "800px")
-#             )
-#           )
-#         )
       )
     )
   )
@@ -338,6 +293,17 @@ ui <- dashboardPage(
 # SERVER ------------------------------------------------------------------
 
 server <- function(session, input, output){
+  
+  observe({
+    
+    input_startdate <- input$input_dates[1]
+    
+    updateDateRangeInput(
+      session,
+      "input_dates",
+      max = input_startdate + 365
+    )
+  })
   
   coord_list <- eventReactive(input$action_pasmap, {
     unlist(str_split(input$input_coords, ",")) %>%
@@ -389,6 +355,20 @@ server <- function(session, input, output){
       pas_area_temp <- pas_area_temp %>% 
         filter(location != "inside")
     }
+    
+    if(as.numeric(input$input_dates[2] - input$input_dates[1]) > 31 & nrow(pas_area_temp) > 25){
+      showNotification(
+        "WARNING: Large data set selected. Please reduce the monitor area and time range.",
+        duration = NULL
+      )
+      shinyjs::disable("action_pat")
+    } else if(nrow(pas_area_temp) > 100){
+      showNotification(
+        "WARNING: Large data set selected. Please reduce the monitor area.",
+        duration = NULL
+      )
+      shinyjs::disable("action_pat")
+    } else {shinyjs::enable("action_pat")}
     
     withProgress(
       message = "Generating map!",
@@ -454,15 +434,15 @@ server <- function(session, input, output){
   })
   
   data_hourly <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, TRUE, FALSE, FALSE) })
-  data_diurnal <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  data_diurnal <- eventReactive(input$action_pat, { apply_functions(data_full(), FALSE, TRUE, FALSE, FALSE) })
   data_daily <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
   
   observe({
     updatePickerInput(
       session,
       "input_sites",
-      choices = data_meta() %>% pull(label),
-      selected = data_meta() %>% pull(label)
+      choices = pull(data_meta(), label),
+      selected = pull(data_meta(), label)
     )
   })
   
@@ -471,16 +451,17 @@ server <- function(session, input, output){
     else if (input$input_set == 2) {data_hourly()}
     else if (input$input_set == 3) {data_daily()}
     else if (input$input_set == 4) {data_diurnal()}
-#     if (input$input_set == 1) {df_temp <- data_full()}
-#     else if (input$input_set == 2) {df_temp <- data_hourly()}
-#     else if (input$input_set == 3) {df_temp <- data_daily()}
-#     else if (input$input_set == 4) {df_temp <- data_diurnal()}
-#     filter_df(df_temp, var = label, include = input$input_sites, location_data = data_meta())
   })
   
   ## MAP
   viz_map <- reactive({
   # output$output_map <- renderPlot({
+#     filter_df(dataset(), include = input$input_sites, var = label, location_data = date_meta()) %>% 
+#       map_stad(
+#         variable_of_interest = pm25_atm,
+#         dataset = .,
+#         location_data = data_meta()
+#       )
     map_stad(
       variable_of_interest = pm25_atm,
       dataset = dataset(),
@@ -494,7 +475,8 @@ server <- function(session, input, output){
     heatmap_cross(
       variable_of_interest = pm25_atm,
       dataset = dataset(),
-      location_data = data_meta()
+      location_data = data_meta(),
+      drop_incomplete = input$input_drop
     )
   })
   
@@ -503,11 +485,13 @@ server <- function(session, input, output){
     updateSelectInput(
       session,
       "input_site",
-      choices = data_meta() %>%
-        select(label) %>%
-        unique() %>%
-        as.list(),
-      selected = 1
+      choices = pull(data_meta(), label),
+      selected = pull(data_meta(), label)[1]
+#       choices = data_meta() %>%
+#         select(label) %>%
+#         unique() %>%
+#         as.list(),
+      # selected = 1
     )
   })
   
@@ -529,6 +513,7 @@ server <- function(session, input, output){
       variable_of_interest = pm25_atm,
       dataset = dataset(),
       location_data = data_meta(),
+      label_filter = input$input_sites,
       add_points = TRUE
     )
   })
