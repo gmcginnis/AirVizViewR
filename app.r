@@ -312,6 +312,12 @@ ui <- dashboardPage(
               title = "Map settings",
               shinyjs::useShinyjs(),
               shinyjs::disabled(
+                selectizeInput(
+                  inputId = "input_maptype",
+                  label = "Map type:",
+                  choices = (formals(get_stamenmap)$maptype)[2:14],
+                  selected = "toner-lite"
+                ),
                 sliderInput(
                   inputId = "input_pt",
                   label = "Point size:",
@@ -614,9 +620,11 @@ server <- function(session, input, output){
     if(input$input_viz == 1){
       shinyjs::enable("input_zoom")
       shinyjs::enable("input_pt")
+      shinyjs::enable("input_maptype")
     } else {
       shinyjs::disable("input_zoom")
       shinyjs::disable("input_pt")
+      shinyjs::disable("input_maptype")
     }
     
     if(input$input_viz == 2){
@@ -666,7 +674,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     } else if(input$input_var == "pm25_lrapa"){
       map_stad(
@@ -676,7 +685,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     } else if(input$input_var == "pm25_atm"){
       map_stad(
@@ -686,7 +696,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     } else if(input$input_var == "pm25_cf1"){
       map_stad(
@@ -696,7 +707,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     } else if(input$input_var == "temperature_c"){
       map_stad(
@@ -706,7 +718,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     } else if(input$input_var == "temperature"){
       map_stad(
@@ -716,7 +729,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     } else if(input$input_var == "humidity"){
       map_stad(
@@ -726,7 +740,8 @@ server <- function(session, input, output){
         zoom = input$input_zoom,
         cap_value = input$input_cap,
         cap_color = input$input_cap_color,
-        point_size = input$input_pt
+        point_size = input$input_pt,
+        maptype = input$input_maptype
       )
     }
   })
