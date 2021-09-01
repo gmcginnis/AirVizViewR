@@ -51,7 +51,7 @@ ui <- dashboardPage(
               title = h3("Welcome!"),
               h4("This dashboard will grab information from",
                  tags$a(href="https://www.purpleair.com/", "PurpleAir"),
-                 "based on provided inputs, and create some visual analysis using the",
+                 "based on provided inputs, and allow you to conduct visual analysis using the",
                  tags$a(href="https://github.com/gmcginnis/AirVizR", tags$code("AirVizR")), "package."),
               "To conduct more advanced analysis or use your own spatio-temporal atmospheric data (STAD),
               including uploading your own PurpleAir data or comparing Federal Reference Monitor,
@@ -61,7 +61,21 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               title = "How to use this dashboard",
               "Go to the \"Inputs\" tab first to provide the area and dates ranges of interest.
-              Once the data has loaded, visit the \"Visualize\" tab to construct visualizations."
+              Once the data has loaded, visit the \"Visualize\" tab to construct visualizations.",
+              tags$hr(),
+              tags$i("Data visualization is a powerful tool. Use it with both curiosity and caution.")
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+              title = "Disclaimer",
+              "The inforamtion displayed on this dashboard is intended for informational and educational purposes only.",
+              HTML("Health effects and weather predictions <b>cannot</b> be extrapolated from these results alone."),
+              "The data is subject to change. While correction factors from the EPA and LRAPA are offered as forms of preliminary data validation,
+              there is the possibility of faulty data due to erroneous monitor reports.",
+              tags$br(),
+              HTML("<b>If users should choose to share results from this dashboard,
+              they are responsible for ensuring that all disclaimers of data sources, settings applied</b>
+              (such as color caps)<b>, and limitations of results are explicitly stated.</b>")
             )
           ),
           column(
@@ -71,8 +85,10 @@ ui <- dashboardPage(
               title = "Author",
               "This dashboard was created by",
               tags$a(href="https://github.com/gmcginnis", "Gillian McGinnis"),
-              "(Reed College '22) in August 2021.",
+              "(Reed College '22) in August 2021, and is actively being updated.",
               tags$br(),
+              "This dashboard and the code within are open to the public, but if you share results please consider including authorship credit!",
+              tags$hr(),
               "Behind-the-scenes:",
               tags$a(href="https://github.com/gmcginnis/AirVizViewR", "GitHub repository")
             ),
@@ -80,8 +96,10 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               title = "Acknowledgments",
               tags$ul(
-                tags$li(tags$a(href="https://neighborsforcleanair.org/", "Neighbors for Clean Air (NCA)")),
-                tags$li(tags$a(href="https://reed.edu/", "Reed College"))
+                tags$b(
+                  tags$li(tags$a(href="https://neighborsforcleanair.org/", "Neighbors for Clean Air (NCA)")),
+                  tags$li(tags$a(href="https://reed.edu/", "Reed College"))
+                )
               ),
               "Special thanks:",
               tags$ul(
@@ -91,9 +109,21 @@ ui <- dashboardPage(
                   tags$li("Micah Bishop, NCA")
                 ),
                 tags$li("Dr. Christine Kendrick, City of Portland"),
-                tags$li("Lance Giles, Lane Regional Protection Agency"),
+                tags$li("Lance Giles, LRAPA"),
+                tags$li("ACSI Air Toxins Subcommittee, Multnomah County"),
                 tags$li("John Wasiutynski, Multnomah County"),
                 tags$li("Knowledge Murphy, Multnomah County")
+              )
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+              title = "See also",
+              tags$ul(
+                tags$li(tags$a(href="https://neighborsforcleanair.org/", "Neighbors for Clean Air (NCA)")),
+                tags$li(tags$a(href="https://www.lrapa.org/", "Lane Regional Air Protection Agency (LRAPA)")),
+                tags$li(tags$a(href="https://fire.airnow.gov", "AirNow Fire and Smoke map")),
+                tags$li(tags$a(href="https://www.iqair.com/", "IQAir map and AirVisual application")),
+                tags$li(tags$a(href="https://www.purpleair.com/map", "PurpleAir map"))
               )
             )
           )
@@ -119,14 +149,16 @@ ui <- dashboardPage(
               textInput(
                 "input_coords",
                 label = "Boundary box:",
-                value = "-122.65,45.48,-122.57,45.52"
+                # value = "-122.65, 45.46, -122.60, 45.50"
+                value = "-122.65, 45.48, -122.57, 45.52"
                 # value = "-122.854, 45.4, -122.58, 45.6"
               ),
               h4("Dates"),
               dateRangeInput(
                 "input_dates",
                 label = "Start and end dates of interest:",
-                start = "2020-07-01", end = "2020-07-07",
+                start = "2021-07-01", end = "2021-07-07",
+                # start = "2020-07-01", end = "2020-07-07",
                 format = "MM d, yyyy"
               ),
               h4("Locations"),
@@ -154,11 +186,14 @@ ui <- dashboardPage(
                 value = NULL
               ),
               h4("State"),
-              "Filter the data set to only include values from a specified state code:",
-              textInput(
+              "If your coordinates include more than one state, but you only want results from one, consider filtering to only include values from a specified state:",
+              selectizeInput(
+              # textInput(
                 "input_statecode",
                 label = "State code:",
-                value = NULL
+                # value = NULL,
+                selected = "",
+                choices = c("", state.abb)
               )
             ),
             box(
@@ -182,8 +217,10 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary",
               title = "PAS",
               "Once you have entered inputs and pressed the 'Get PAS' button, a map will appear shortly after
-              to display the monitors that match the inputs of interest. If there are more than 20 monitors displayed,
+              to display the monitors that match the inputs of interest. If there are more than 25 monitors displayed,
               or if your date ranges are quite lengthy, consider applying more filters, as data loading can take a long time.",
+              tags$br(),
+              "It should be noted that not all monitors displayed below will report complete data sets.",
               tags$br(),
               plotOutput("output_pasmap", height = "500px"),
               tags$br()
@@ -194,17 +231,16 @@ ui <- dashboardPage(
               "Map look good? Press the button below to load the data!",
               tags$br(),
               shinyjs::useShinyjs(),
-              shinyjs::disabled(actionButton(
-              # actionButton(
-                inputId = "action_pat",
-                label = "Get PAT!",
-                icon = icon("hand-point-right"),
-                class = "btn-info"
-              # ),
-              )),
+              shinyjs::disabled(
+                actionButton(
+                  inputId = "action_pat",
+                  label = "Get PAT!",
+                  icon = icon("hand-point-right"),
+                  class = "btn-info"
+                )
+              ),
               tags$br(),
-              "Once it has loaded, a table will appear below, and you can plot on the \'Visualize\' tab.",
-              tags$hr(),
+              "Once the data has loaded, a table will appear below, and you can plot on the \'Visualize\' tab.",
               tableOutput("output_table_results")
             )
           )
@@ -225,8 +261,8 @@ ui <- dashboardPage(
                 choices = list(
                   "Full (maximum granularity)" = 1,
                   "Hourly (by day)" = 2,
-                  "Daily" = 3,
-                  "Diurnal (24 hour cycle)" = 4
+                  "Daily" = 3
+                  # "Diurnal (24 hour cycle)" = 4
                 ),
                 selected = 2
               ),
@@ -246,20 +282,11 @@ ui <- dashboardPage(
                 label = "Select the visualization of interest!",
                 choices = list(
                   "Map" = 1,
-                  "Heatmap (single)" = 2,
                   "Heatmap (multiple)" = 3,
+                  "Heatmap (single; hourly)" = 2,
                   "Time series" = 4
                 ),
                 selected = 1
-              ),
-              tags$hr(),
-              pickerInput(
-                inputId = "input_sites",
-                label = "Sites of interest:",
-                choices = c(),
-                selected = c(),
-                multiple = TRUE,
-                options = list(`actions-box` = TRUE)
               )
             ),
             box(
@@ -281,13 +308,23 @@ ui <- dashboardPage(
               )
             ),
             box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
-              shinyjs::useShinyjs(),
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = FALSE,
               title = "Map settings",
+              shinyjs::useShinyjs(),
+              shinyjs::disabled(
+                sliderInput(
+                  inputId = "input_pt",
+                  label = "Point size:",
+                  min = 1, max = 25,
+                  value = 3
+                )
+              ),
+              tags$hr(),
+              "Do the streets appear to be fuzzy? Increase the following:",
               shinyjs::disabled(
                 sliderInput(
                   inputId = "input_zoom",
-                  label = "Map zoom value (increase this if the streets look fuzzy):",
+                  label = "Map zoom value:",
                   min = 10, max = 16,
                   value = 13
                 )
@@ -302,11 +339,14 @@ ui <- dashboardPage(
                   inputId = "input_drop",
                   label = "Drop incomplete sets",
                   value = FALSE
-                ),
-                tags$hr(),
+                )
+              ),
+              tags$hr(),
+              "For a heatmap of type 'single', select 1 site to visualize.",
+              shinyjs::disabled(
                 selectInput(
                   inputId = "input_site",
-                  label = "For a heatmap of type 'single', select 1 site to visualize:",
+                  label = "Site of interest:",
                   choices = NULL
                 )
               )
@@ -315,6 +355,17 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
               shinyjs::useShinyjs(),
               title = "Time series settings",
+              shinyjs::disabled(
+                pickerInput(
+                  inputId = "input_sites",
+                  label = "Sites of interest:",
+                  choices = c(),
+                  selected = c(),
+                  multiple = TRUE,
+                  options = list(`actions-box` = TRUE)
+                )
+              ),
+              tags$hr(),
               shinyjs::disabled(
                 checkboxInput("input_points", label = "Add points", value = TRUE),
                 checkboxInput("input_extrema", label = "Add extrema", value = TRUE),
@@ -536,13 +587,13 @@ server <- function(session, input, output){
           selected = selected_var
         )
       } else {
-      updateSelectizeInput(
-        session,
-        "input_var",
-        choices = list_var[3:7]
-      )
+        updateSelectizeInput(
+          session,
+          "input_var",
+          choices = list_var[3:7]
+        )
       }
-    }else{
+    } else {
       selected_var <- input$input_var
       updateSelectizeInput(
         session,
@@ -551,31 +602,45 @@ server <- function(session, input, output){
         selected = selected_var
       )
     }
+    
+#     if(input$input_set == 2) {
+#       updateRadioGroupButtons(
+#         input_viz
+#       )
+#     }
   })
   
   observe({
     if(input$input_viz == 1){
       shinyjs::enable("input_zoom")
-    } else {shinyjs::disable("input_zoom")}
+      shinyjs::enable("input_pt")
+    } else {
+      shinyjs::disable("input_zoom")
+      shinyjs::disable("input_pt")
+    }
     
     if(input$input_viz == 2){
       shinyjs::enable("input_site")
-    } else {shinyjs::disable("input_site")}
+    } else {
+      shinyjs::disable("input_site")
+    }
     
-    if(input$input_viz == 2 | input$input_viz == 3){
+    if(input$input_viz == 3){
       shinyjs::enable("input_drop")
-    } else {shinyjs::disable("input_drop")}
+    } else {
+      shinyjs::disable("input_drop")
+    }
     
     if(input$input_viz == 4){
       shinyjs::enable("input_points")
       shinyjs::enable("input_extrema")
       shinyjs::enable("input_average")
-      shinyjs::enable("input_column")
+      # shinyjs::enable("input_column")
     } else {
       shinyjs::disable("input_points")
       shinyjs::disable("input_extrema")
       shinyjs::disable("input_average")
-      shinyjs::disable("input_column")
+      # shinyjs::disable("input_column")
     }
   })
   
@@ -598,58 +663,138 @@ server <- function(session, input, output){
         location_data = data_meta(),
         zoom = input$input_zoom,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     } else if(input$input_var == "pm25_lrapa"){
       map_stad(
         variable_of_interest = pm25_lrapa,
         dataset = dataset(),
-        location_data = data_meta()
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     } else if(input$input_var == "pm25_atm"){
       map_stad(
         variable_of_interest = pm25_atm,
         dataset = dataset(),
-        location_data = data_meta()
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     } else if(input$input_var == "pm25_cf1"){
       map_stad(
         variable_of_interest = pm25_cf1,
         dataset = dataset(),
-        location_data = data_meta()
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     } else if(input$input_var == "temperature_c"){
       map_stad(
         variable_of_interest = temperature_c,
         dataset = dataset(),
-        location_data = data_meta()
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     } else if(input$input_var == "temperature"){
       map_stad(
         variable_of_interest = temperature,
         dataset = dataset(),
-        location_data = data_meta()
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     } else if(input$input_var == "humidity"){
       map_stad(
         variable_of_interest = humidity,
         dataset = dataset(),
-        location_data = data_meta()
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        point_size = input$input_pt
       )
     }
   })
   
   ## HEATMAP
   viz_heatmap <- reactive({
-  # output$output_heatmap <- renderPlot({
-    heatmap_cross(
-      variable_of_interest = pm25_atm,
-      dataset = dataset(),
-      location_data = data_meta(),
-      drop_incomplete = input$input_drop,
-      cap_value = input$input_cap,
-      cap_color = input$input_cap_color
-    )
+    if(input$input_var == "pm25_epa_2021"){
+      heatmap_cross(
+        variable_of_interest = pm25_epa_2021,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_lrapa"){
+      heatmap_cross(
+        variable_of_interest = pm25_lrapa,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_atm"){
+      heatmap_cross(
+        variable_of_interest = pm25_atm,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_cf1"){
+      heatmap_cross(
+        variable_of_interest = pm25_cf1,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "temperature_c"){
+      heatmap_cross(
+        variable_of_interest = temperature_c,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "temperature"){
+      heatmap_cross(
+        variable_of_interest = temperature,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "humidity"){
+      heatmap_cross(
+        variable_of_interest = humidity,
+        dataset = dataset(),
+        location_data = data_meta(),
+        drop_incomplete = input$input_drop,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    }
   })
   
   ## SINGLE HEATMAP
@@ -659,45 +804,179 @@ server <- function(session, input, output){
       "input_site",
       choices = pull(data_meta(), label),
       selected = pull(data_meta(), label)[1]
-#       choices = data_meta() %>%
-#         select(label) %>%
-#         unique() %>%
-#         as.list(),
-      # selected = 1
     )
   })
   
   viz_heatmap_single <- reactive({
-  # output$output_heatmap_single <- renderPlot({
-    heatmap_single(
-      variable_of_interest = pm25_atm,
-      site_of_interest = input$input_site,
-      dataset = data_hourly(),
-      location_data = data_meta(),
-      cap_value = input$input_cap,
-      cap_color = input$input_cap_color
-    )
+    if(input$input_var == "pm25_epa_2021"){
+      heatmap_single(
+        variable_of_interest = pm25_epa_2021,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_lrapa"){
+      heatmap_single(
+        variable_of_interest = pm25_lrapa,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_atm"){
+      heatmap_single(
+        variable_of_interest = pm25_atm,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_cf1"){
+      heatmap_single(
+        variable_of_interest = pm25_cf1,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "temperature_c"){
+      heatmap_single(
+        variable_of_interest = temperature_c,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "temperature"){
+      heatmap_single(
+        variable_of_interest = temperature,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "humidity"){
+      heatmap_single(
+        variable_of_interest = humidity,
+        site_of_interest = input$input_site,
+        dataset = data_hourly(),
+        location_data = data_meta(),
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    }
   })
   
   
   ## LINE
   viz_line <- reactive({
-  # output$output_line <- renderPlot({
-    ts_line(
-      variable_of_interest = pm25_atm,
-      dataset = dataset(),
-      location_data = data_meta(),
-      label_filter = input$input_sites,
-      cap_value = input$input_cap,
-      cap_color = input$input_cap_color,
-      add_points = input$input_points,
-      add_average = input$input_average,
-      add_extrema = input$input_extrema,
-      single_column = input$input_column
-    )
+    if(input$input_var == "pm25_epa_2021"){
+      ts_line(
+        variable_of_interest = pm25_epa_2021,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    } else if(input$input_var == "pm25_lrapa"){
+      ts_line(
+        variable_of_interest = pm25_lrapa,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    } else if(input$input_var == "pm25_atm"){
+      ts_line(
+        variable_of_interest = pm25_atm,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    } else if(input$input_var == "pm25_cf1"){
+      ts_line(
+        variable_of_interest = pm25_cf1,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    } else if(input$input_var == "temperature_c"){
+      ts_line(
+        variable_of_interest = temperature_c,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    } else if(input$input_var == "temperature"){
+      ts_line(
+        variable_of_interest = temperature,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    } else if(input$input_var == "humidity"){
+      ts_line(
+        variable_of_interest = humidity,
+        dataset = dataset(),
+        location_data = data_meta(),
+        label_filter = input$input_sites,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color,
+        add_points = input$input_points,
+        add_average = input$input_average,
+        add_extrema = input$input_extrema,
+        single_column = input$input_column
+      )
+    }
   })
   
   output_plot <- reactive({
+#     if (input$input_viz == 1) {
+#       input_startdate <- input$input_dates[1]
+#       input_enddate <- input$input_dates[2]
+#       viz_map()
+#     }
     if (input$input_viz == 1) {viz_map()}
     else if (input$input_viz == 2) {viz_heatmap_single()}
     else if (input$input_viz == 3) {viz_heatmap()}
