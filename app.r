@@ -632,11 +632,13 @@ server <- function(session, input, output){
     }
     
     if(input$input_viz == 4){
+      shinyjs::enable("input_sites")
       shinyjs::enable("input_points")
       shinyjs::enable("input_extrema")
       shinyjs::enable("input_average")
       # shinyjs::enable("input_column")
     } else {
+      shinyjs::disable("input_sites")
       shinyjs::disable("input_points")
       shinyjs::disable("input_extrema")
       shinyjs::disable("input_average")
