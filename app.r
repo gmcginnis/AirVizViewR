@@ -10,73 +10,14 @@ library(stringr)
 # library(DT)
 # library(AirSensor)
 
-box_settings <- box(
-  width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-  title = "Variables",
-#   "Select the values and variables to be plotted",
-#   # varSelectInput(
-#   selectInput(
-#     inputId = "input_var",
-#     label = "Choose the variable of interest to plot",
-#     # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
-#     choices = july_api_daily %>% slice(1) %>% select_if(is.numeric) %>% names(),
-#     selected = "pm25_atm"
-#   ),
-#   tags$hr(),
-  radioButtons(
-    inputId = "input_set",
-    label = "Choose the data set to plot",
-    choices = list(
-      "Full (maximum granularity)" = 1,
-      "Hourly (by day)" = 2,
-      "Daily" = 3,
-      "Diurnal (24 hour cycle)" = 4
-    ),
-    selected = 2
-  ),
-  tags$hr(),
-  radioButtons(
-    inputId = "input_viz",
-    label = "Select the visualization of interest!",
-    choices = list(
-      "Map" = 1,
-      "Heatmap (single)" = 2,
-      "Heatmap (multiple)" = 3,
-      "Time series" = 4
-    ),
-    selected = 1
-  )
-  #               actionButton(
-  #                 inputId = "action_map",
-  #                 label = "Map the data!",
-  #                 icon = icon("hand-point-right"),
-  #                 class = "btn-info"
-  #               )
-)
-
-box_more <- box(
-  width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE,
-  title = "Additional filters",
-  checkboxInput(
-    inputId = "input_drop",
-    label = "Drop incomplete sets",
-    value = FALSE
-  ),
-  tags$hr(),
-  h4("Locations"),
-  selectInput(
-    inputId = "input_site",
-    label = "For a heatmap of type 'single', select 1 site to visualize:",
-    choices = NULL
-  ),
-  pickerInput(
-    inputId = "input_sites",
-    label = "For all other visualization types, select the sites of interest:",
-    choices = c(),
-    selected = c(),
-    multiple = TRUE,
-    options = list(`actions-box` = TRUE)
-  )
+list_var <- list(
+  "PM2.5 (EPA corrected)" = "pm25_epa_2021",
+  "PM2.5 (LRAPA corrected)" = "pm25_lrapa",
+  "PM2.5 (CF=ATM)" = "pm25_atm",
+  "PM2.5 (CF=1)" = "pm25_cf1",
+  "Temperature (ºC)" = "temperature_c",
+  "Temperature (ºF)" = "temperature",
+  "Humidity" = "humidity"
 )
 
 # UI ----------------------------------------------------------------------
@@ -131,6 +72,7 @@ ui <- dashboardPage(
               "This dashboard was created by",
               tags$a(href="https://github.com/gmcginnis", "Gillian McGinnis"),
               "(Reed College '22) in August 2021.",
+              tags$br(),
               "Behind-the-scenes:",
               tags$a(href="https://github.com/gmcginnis/AirVizViewR", "GitHub repository")
             ),
@@ -261,7 +203,7 @@ ui <- dashboardPage(
               # ),
               )),
               tags$br(),
-              "Once it has loaded, a table will appear below, and you can plot on any of the other tabs.",
+              "Once it has loaded, a table will appear below, and you can plot on the \'Visualize\' tab.",
               tags$hr(),
               tableOutput("output_table_results")
             )
@@ -273,8 +215,113 @@ ui <- dashboardPage(
         fluidRow(
           column(
             width = 4,
-            box_settings,
-            box_more
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE,
+              title = "Variables",
+              "Select the values and variables to be plotted",
+              radioButtons(
+                inputId = "input_set",
+                label = "Choose the data set to plot",
+                choices = list(
+                  "Full (maximum granularity)" = 1,
+                  "Hourly (by day)" = 2,
+                  "Daily" = 3,
+                  "Diurnal (24 hour cycle)" = 4
+                ),
+                selected = 2
+              ),
+              tags$hr(),
+              # varSelectizeInput(
+              selectizeInput(
+                # selectInput(
+                inputId = "input_var",
+                label = "Choose the variable of interest to plot",
+                choices = list_var,
+                # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
+                selected = "pm25_epa_2021"
+              ),
+              tags$hr(),
+              radioButtons(
+                inputId = "input_viz",
+                label = "Select the visualization of interest!",
+                choices = list(
+                  "Map" = 1,
+                  "Heatmap (single)" = 2,
+                  "Heatmap (multiple)" = 3,
+                  "Time series" = 4
+                ),
+                selected = 1
+              ),
+              tags$hr(),
+              pickerInput(
+                inputId = "input_sites",
+                label = "Sites of interest:",
+                choices = c(),
+                selected = c(),
+                multiple = TRUE,
+                options = list(`actions-box` = TRUE)
+              )
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+              title = "Color cap",
+              "If the color scale is oversaturated, consider adding a cap. Values at or above the following selection will be colored separately.",
+              sliderInput(
+                inputId = "input_cap",
+                label = "Cap value:",
+                min = 0, max = 100,
+                value = 100
+              ),
+              selectizeInput(
+                inputId = "input_cap_color",
+                label = "Cap color:",
+                choices = str_subset(colors(), "[:digit:]", negate = TRUE),
+                # choices = colors(),
+                selected = "green"
+              )
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+              shinyjs::useShinyjs(),
+              title = "Map settings",
+              shinyjs::disabled(
+                sliderInput(
+                  inputId = "input_zoom",
+                  label = "Map zoom value (increase this if the streets look fuzzy):",
+                  min = 10, max = 16,
+                  value = 13
+                )
+              )
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+              shinyjs::useShinyjs(),
+              title = "Heatmap settings",
+              shinyjs::disabled(
+                checkboxInput(
+                  inputId = "input_drop",
+                  label = "Drop incomplete sets",
+                  value = FALSE
+                ),
+                tags$hr(),
+                selectInput(
+                  inputId = "input_site",
+                  label = "For a heatmap of type 'single', select 1 site to visualize:",
+                  choices = NULL
+                )
+              )
+            ),
+            box(
+              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+              shinyjs::useShinyjs(),
+              title = "Time series settings",
+              shinyjs::disabled(
+                checkboxInput("input_points", label = "Add points", value = TRUE),
+                checkboxInput("input_extrema", label = "Add extrema", value = TRUE),
+                checkboxInput("input_average", label = "Add average", value = TRUE),
+                checkboxInput("input_column", label = "Single column", value = FALSE)
+              )
+            )
           ),
           column(
             width = 6,
@@ -433,9 +480,34 @@ server <- function(session, input, output){
     )
   })
   
-  data_hourly <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, TRUE, FALSE, FALSE) })
-  data_diurnal <- eventReactive(input$action_pat, { apply_functions(data_full(), FALSE, TRUE, FALSE, FALSE) })
-  data_daily <- eventReactive(input$action_pat, { apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE) })
+  data_hourly <- eventReactive(input$action_pat, {
+    withProgress(
+      message = "Applying correction factors!",
+      apply_functions(data_full(), TRUE, TRUE, FALSE, FALSE)
+    )
+  })
+  data_diurnal <- eventReactive(input$action_pat, {
+    withProgress(
+      message = "Applying correction factors!",
+      apply_functions(data_full(), FALSE, TRUE, FALSE, FALSE)
+    )
+  })
+  data_daily <- eventReactive(input$action_pat, {
+    withProgress(
+      message = "Applying correction factors!",
+      apply_functions(data_full(), TRUE, FALSE, FALSE, FALSE)
+    )
+  })
+  
+  observeEvent(input$action_pat, {
+      updateSliderInput(
+        session,
+        "input_cap",
+        min = data_full() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
+        max = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
+        value = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
+      )
+  })
   
   observe({
     updatePickerInput(
@@ -453,20 +525,118 @@ server <- function(session, input, output){
     else if (input$input_set == 4) {data_diurnal()}
   })
   
+  observe({
+    if(input$input_set == 1){
+      if(input$input_var %in% list_var[3:7]){
+        selected_var <- input$input_var
+        updateSelectizeInput(
+          session,
+          "input_var",
+          choices = list_var[3:7],
+          selected = selected_var
+        )
+      } else {
+      updateSelectizeInput(
+        session,
+        "input_var",
+        choices = list_var[3:7]
+      )
+      }
+    }else{
+      selected_var <- input$input_var
+      updateSelectizeInput(
+        session,
+        "input_var",
+        choices = list_var,
+        selected = selected_var
+      )
+    }
+  })
+  
+  observe({
+    if(input$input_viz == 1){
+      shinyjs::enable("input_zoom")
+    } else {shinyjs::disable("input_zoom")}
+    
+    if(input$input_viz == 2){
+      shinyjs::enable("input_site")
+    } else {shinyjs::disable("input_site")}
+    
+    if(input$input_viz == 2 | input$input_viz == 3){
+      shinyjs::enable("input_drop")
+    } else {shinyjs::disable("input_drop")}
+    
+    if(input$input_viz == 4){
+      shinyjs::enable("input_points")
+      shinyjs::enable("input_extrema")
+      shinyjs::enable("input_average")
+      shinyjs::enable("input_column")
+    } else {
+      shinyjs::disable("input_points")
+      shinyjs::disable("input_extrema")
+      shinyjs::disable("input_average")
+      shinyjs::disable("input_column")
+    }
+  })
+  
+#   observe({
+#     updateSliderInput(
+#       session,
+#       "input_cap",
+#       min = dataset() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
+#       max = dataset() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
+#       value = dataset() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
+#     )
+#   })
+  
   ## MAP
   viz_map <- reactive({
-  # output$output_map <- renderPlot({
-#     filter_df(dataset(), include = input$input_sites, var = label, location_data = date_meta()) %>% 
-#       map_stad(
-#         variable_of_interest = pm25_atm,
-#         dataset = .,
-#         location_data = data_meta()
-#       )
-    map_stad(
-      variable_of_interest = pm25_atm,
-      dataset = dataset(),
-      location_data = data_meta()
-    )
+    if(input$input_var == "pm25_epa_2021"){
+      map_stad(
+        variable_of_interest = pm25_epa_2021,
+        dataset = dataset(),
+        location_data = data_meta(),
+        zoom = input$input_zoom,
+        cap_value = input$input_cap,
+        cap_color = input$input_cap_color
+      )
+    } else if(input$input_var == "pm25_lrapa"){
+      map_stad(
+        variable_of_interest = pm25_lrapa,
+        dataset = dataset(),
+        location_data = data_meta()
+      )
+    } else if(input$input_var == "pm25_atm"){
+      map_stad(
+        variable_of_interest = pm25_atm,
+        dataset = dataset(),
+        location_data = data_meta()
+      )
+    } else if(input$input_var == "pm25_cf1"){
+      map_stad(
+        variable_of_interest = pm25_cf1,
+        dataset = dataset(),
+        location_data = data_meta()
+      )
+    } else if(input$input_var == "temperature_c"){
+      map_stad(
+        variable_of_interest = temperature_c,
+        dataset = dataset(),
+        location_data = data_meta()
+      )
+    } else if(input$input_var == "temperature"){
+      map_stad(
+        variable_of_interest = temperature,
+        dataset = dataset(),
+        location_data = data_meta()
+      )
+    } else if(input$input_var == "humidity"){
+      map_stad(
+        variable_of_interest = humidity,
+        dataset = dataset(),
+        location_data = data_meta()
+      )
+    }
   })
   
   ## HEATMAP
@@ -476,7 +646,9 @@ server <- function(session, input, output){
       variable_of_interest = pm25_atm,
       dataset = dataset(),
       location_data = data_meta(),
-      drop_incomplete = input$input_drop
+      drop_incomplete = input$input_drop,
+      cap_value = input$input_cap,
+      cap_color = input$input_cap_color
     )
   })
   
@@ -501,7 +673,9 @@ server <- function(session, input, output){
       variable_of_interest = pm25_atm,
       site_of_interest = input$input_site,
       dataset = data_hourly(),
-      location_data = data_meta()
+      location_data = data_meta(),
+      cap_value = input$input_cap,
+      cap_color = input$input_cap_color
     )
   })
   
@@ -514,7 +688,12 @@ server <- function(session, input, output){
       dataset = dataset(),
       location_data = data_meta(),
       label_filter = input$input_sites,
-      add_points = TRUE
+      cap_value = input$input_cap,
+      cap_color = input$input_cap_color,
+      add_points = input$input_points,
+      add_average = input$input_average,
+      add_extrema = input$input_extrema,
+      single_column = input$input_column
     )
   })
   
