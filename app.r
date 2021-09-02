@@ -20,6 +20,8 @@ list_var <- list(
   "Humidity" = "humidity"
 )
 
+list_colors <- str_subset(colors(), "[:digit:]", negate = TRUE)
+
 # UI ----------------------------------------------------------------------
 
 ui <- dashboardPage(
@@ -32,14 +34,14 @@ ui <- dashboardPage(
       menuItem("Inputs", tabName = "tab_inputs", icon = icon("i-cursor")),
       menuItem("Visualize", tabName = "tab_viz", icon = icon("hand-pointer"))
       # menuItem("Select", tabName = "tab_select", icon = icon("hand-pointer")),
-#       menuItem("Select", tabName = "tab_map", icon = icon("map-marker-alt")),
-#       menuItem("Large heatmap", tabName = "tab_heatmap", icon = icon("barcode")),
-#       menuItem("Single site heatmap", tabName = "tab_heatmap_single", icon = icon("layer-group")),
-#       menuItem("Time Series", tabName = "tab_ts", icon = icon("chart-line"))
+      #       menuItem("Select", tabName = "tab_map", icon = icon("map-marker-alt")),
+      #       menuItem("Large heatmap", tabName = "tab_heatmap", icon = icon("barcode")),
+      #       menuItem("Single site heatmap", tabName = "tab_heatmap_single", icon = icon("layer-group")),
+      #       menuItem("Time Series", tabName = "tab_ts", icon = icon("chart-line"))
     )
   ),
   dashboardBody(
-# WELCOMETAB  ------------------------------------------------------------------
+    # WELCOMETAB  ------------------------------------------------------------------
     tabItems(
       tabItem(
         tabName = "tab_welcome",
@@ -74,10 +76,10 @@ ui <- dashboardPage(
               there is the possibility of faulty data due to erroneous monitor reports.",
               tags$br(),
               HTML("<b>If users should choose to share results from this dashboard,
-              they are responsible for ensuring that all disclaimers of data sources, settings applied</b>
-              (such as color caps)<b>, and limitations of results are explicitly stated.</b>")
-            )
-          ),
+                   they are responsible for ensuring that all disclaimers of data sources, settings applied</b>
+                   (such as color caps)<b>, and limitations of results are explicitly stated.</b>")
+              )
+              ),
           column(
             width = 4,
             box(
@@ -127,8 +129,8 @@ ui <- dashboardPage(
               )
             )
           )
-        )
-      ),
+            )
+        ),
       tabItem(
         tabName = "tab_inputs",
         fluidRow(
@@ -157,8 +159,8 @@ ui <- dashboardPage(
               dateRangeInput(
                 "input_dates",
                 label = "Start and end dates of interest:",
-                start = "2021-07-01", end = "2021-07-07",
-                # start = "2020-07-01", end = "2020-07-07",
+                # start = "2021-07-01", end = "2021-07-07",
+                start = "2020-07-01", end = "2020-07-07",
                 format = "MM d, yyyy"
               ),
               h4("Locations"),
@@ -188,7 +190,7 @@ ui <- dashboardPage(
               h4("State"),
               "If your coordinates include more than one state, but you only want results from one, consider filtering to only include values from a specified state:",
               selectizeInput(
-              # textInput(
+                # textInput(
                 "input_statecode",
                 label = "State code:",
                 # value = NULL,
@@ -210,189 +212,224 @@ ui <- dashboardPage(
                 class = "btn-info"
               )
             )
+        ),
+        column(
+          width = 6,
+          box(
+            width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+            title = "PAS",
+            "Once you have entered inputs and pressed the 'Get PAS' button, a map will appear shortly after
+            to display the monitors that match the inputs of interest. If there are more than 25 monitors displayed,
+            or if your date ranges are quite lengthy, consider applying more filters, as data loading can take a long time.",
+            tags$br(),
+            "It should be noted that not all monitors displayed below will report complete data sets.",
+            tags$br(),
+            plotOutput("output_pasmap", height = "500px"),
+            tags$br()
           ),
-          column(
-            width = 6,
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = "PAS",
-              "Once you have entered inputs and pressed the 'Get PAS' button, a map will appear shortly after
-              to display the monitors that match the inputs of interest. If there are more than 25 monitors displayed,
-              or if your date ranges are quite lengthy, consider applying more filters, as data loading can take a long time.",
-              tags$br(),
-              "It should be noted that not all monitors displayed below will report complete data sets.",
-              tags$br(),
-              plotOutput("output_pasmap", height = "500px"),
-              tags$br()
+          box(
+            width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+            title = "Next steps",
+            "Map look good? Press the button below to load the data!",
+            tags$br(),
+            shinyjs::useShinyjs(),
+            shinyjs::disabled(
+              actionButton(
+                inputId = "action_pat",
+                label = "Get PAT!",
+                icon = icon("hand-point-right"),
+                class = "btn-info"
+              )
             ),
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = "Next steps",
-              "Map look good? Press the button below to load the data!",
-              tags$br(),
-              shinyjs::useShinyjs(),
-              shinyjs::disabled(
-                actionButton(
-                  inputId = "action_pat",
-                  label = "Get PAT!",
-                  icon = icon("hand-point-right"),
-                  class = "btn-info"
-                )
-              ),
-              tags$br(),
-              "Once the data has loaded, a table will appear below, and you can plot on the \'Visualize\' tab.",
-              tableOutput("output_table_results")
-            )
+            tags$br(),
+            "Once the data has loaded, a table will appear below, and you can plot on the \'Visualize\' tab.",
+            tableOutput("output_table_results")
+          )
+        )
+      )
+),
+tabItem(
+  tabName = "tab_viz",
+  fluidRow(
+    column(
+      width = 4,
+      box(
+        width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE,
+        title = "Variables",
+        "Select the values and variables to be plotted",
+        radioButtons(
+          inputId = "input_set",
+          label = "Choose the data set to plot:",
+          choices = list(
+            "Full (maximum granularity)" = 1,
+            "Hourly (by day)" = 2,
+            "Daily" = 3
+            # "Diurnal (24 hour cycle)" = 4
+          ),
+          selected = 2
+        ),
+        tags$hr(),
+        # varSelectizeInput(
+        selectizeInput(
+          # selectInput(
+          inputId = "input_var",
+          label = "Choose the variable of interest to plot:",
+          choices = list_var,
+          # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
+          selected = "pm25_epa_2021"
+        ),
+        tags$hr(),
+        radioButtons(
+          inputId = "input_viz",
+          label = "Select the visualization of interest:",
+          choices = list(
+            "Map" = 1,
+            "Heatmap (multiple)" = 3,
+            "Heatmap (single; hourly)" = 2,
+            "Time series" = 4
+          ),
+          selected = 4
+        )
+      ),
+      box(
+        width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+        title = "Color cap",
+        "If the color scale is oversaturated, consider adding a cap. Values at or above the following selection will be colored separately.",
+        sliderInput(
+          inputId = "input_cap",
+          label = "Cap value:",
+          min = 0, max = 100,
+          value = 100,
+          round = TRUE
+        ),
+        selectizeInput(
+          inputId = "input_cap_color",
+          label = "Cap color:",
+          choices = list_colors,
+          # choices = colors(),
+          selected = "green"
+        )
+      ),
+      box(
+        width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+        title = "Map settings",
+        shinyjs::useShinyjs(),
+        shinyjs::disabled(
+          selectizeInput(
+            inputId = "input_maptype",
+            label = "Map type:",
+            choices = (formals(ggmap::get_stamenmap)$maptype)[2:14],
+            selected = "toner-lite"
+          ),
+          sliderInput(
+            inputId = "input_pt",
+            label = "Point size:",
+            min = 1, max = 25,
+            value = 3
+            #                 ),
+            #                 tags$hr(),
+            #                 selectizeInput(
+            #                   inputId = "input_tint",
+            #                   label = "Tint color:",
+            #                   choices = str_subset(colors(), "[:digit:]", negate = TRUE),
+            #                   selected = "black"
+            #                 ),
+            #                 sliderInput(
+            #                   inputId = "input_alpha",
+            #                   label = "Tint alpha:",
+            #                   min = 0.01, max = 1,
+            #                   value = 0.5
+          )
+        ),
+        tags$hr(),
+        "Do the streets appear to be fuzzy? Increase the following:",
+        shinyjs::disabled(
+          sliderInput(
+            inputId = "input_zoom",
+            label = "Map zoom value:",
+            min = 10, max = 16,
+            value = 13
           )
         )
       ),
-      tabItem(
-        tabName = "tab_viz",
-        fluidRow(
-          column(
-            width = 4,
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE,
-              title = "Variables",
-              "Select the values and variables to be plotted",
-              radioButtons(
-                inputId = "input_set",
-                label = "Choose the data set to plot",
-                choices = list(
-                  "Full (maximum granularity)" = 1,
-                  "Hourly (by day)" = 2,
-                  "Daily" = 3
-                  # "Diurnal (24 hour cycle)" = 4
-                ),
-                selected = 2
-              ),
-              tags$hr(),
-              # varSelectizeInput(
-              selectizeInput(
-                # selectInput(
-                inputId = "input_var",
-                label = "Choose the variable of interest to plot",
-                choices = list_var,
-                # data = july_api_daily %>% slice(1) %>% select_if(is.numeric),
-                selected = "pm25_epa_2021"
-              ),
-              tags$hr(),
-              radioButtons(
-                inputId = "input_viz",
-                label = "Select the visualization of interest!",
-                choices = list(
-                  "Map" = 1,
-                  "Heatmap (multiple)" = 3,
-                  "Heatmap (single; hourly)" = 2,
-                  "Time series" = 4
-                ),
-                selected = 1
-              )
-            ),
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
-              title = "Color cap",
-              "If the color scale is oversaturated, consider adding a cap. Values at or above the following selection will be colored separately.",
-              sliderInput(
-                inputId = "input_cap",
-                label = "Cap value:",
-                min = 0, max = 100,
-                value = 100
-              ),
-              selectizeInput(
-                inputId = "input_cap_color",
-                label = "Cap color:",
-                choices = str_subset(colors(), "[:digit:]", negate = TRUE),
-                # choices = colors(),
-                selected = "green"
-              )
-            ),
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = FALSE,
-              title = "Map settings",
-              shinyjs::useShinyjs(),
-              shinyjs::disabled(
-                selectizeInput(
-                  inputId = "input_maptype",
-                  label = "Map type:",
-                  choices = (formals(get_stamenmap)$maptype)[2:14],
-                  selected = "toner-lite"
-                ),
-                sliderInput(
-                  inputId = "input_pt",
-                  label = "Point size:",
-                  min = 1, max = 25,
-                  value = 3
-                )
-              ),
-              tags$hr(),
-              "Do the streets appear to be fuzzy? Increase the following:",
-              shinyjs::disabled(
-                sliderInput(
-                  inputId = "input_zoom",
-                  label = "Map zoom value:",
-                  min = 10, max = 16,
-                  value = 13
-                )
-              )
-            ),
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
-              shinyjs::useShinyjs(),
-              title = "Heatmap settings",
-              shinyjs::disabled(
-                checkboxInput(
-                  inputId = "input_drop",
-                  label = "Drop incomplete sets",
-                  value = FALSE
-                )
-              ),
-              tags$hr(),
-              "For a heatmap of type 'single', select 1 site to visualize.",
-              shinyjs::disabled(
-                selectInput(
-                  inputId = "input_site",
-                  label = "Site of interest:",
-                  choices = NULL
-                )
-              )
-            ),
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
-              shinyjs::useShinyjs(),
-              title = "Time series settings",
-              shinyjs::disabled(
-                pickerInput(
-                  inputId = "input_sites",
-                  label = "Sites of interest:",
-                  choices = c(),
-                  selected = c(),
-                  multiple = TRUE,
-                  options = list(`actions-box` = TRUE)
-                )
-              ),
-              tags$hr(),
-              shinyjs::disabled(
-                checkboxInput("input_points", label = "Add points", value = TRUE),
-                checkboxInput("input_extrema", label = "Add extrema", value = TRUE),
-                checkboxInput("input_average", label = "Add average", value = TRUE),
-                checkboxInput("input_column", label = "Single column", value = FALSE)
-              )
-            )
-          ),
-          column(
-            width = 6,
-            box(
-              width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-              title = h3("Visualization"),
-              plotOutput("output_viz", height = "800px")
-            )
+      box(
+        width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
+        shinyjs::useShinyjs(),
+        title = "Heatmap settings",
+        shinyjs::disabled(
+          checkboxInput(
+            inputId = "input_drop",
+            label = "Drop incomplete sets",
+            value = FALSE
+          )
+        ),
+        tags$hr(),
+        "For a heatmap of type 'single', select 1 site to visualize.",
+        shinyjs::disabled(
+          selectInput(
+            inputId = "input_site",
+            label = "Site of interest:",
+            choices = NULL
           )
         )
+      ),
+      box(
+        width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = FALSE,
+        shinyjs::useShinyjs(),
+        title = "Time series settings",
+        # shinyjs::disabled(
+          pickerInput(
+            inputId = "input_sites",
+            label = "Sites of interest:",
+            choices = c(),
+            selected = c(),
+            multiple = TRUE,
+            options = list(`actions-box` = TRUE)
+          # )
+        ),
+        tags$hr(),
+        shinyjs::disabled(
+          checkboxInput("input_points", label = "Add points", value = TRUE),
+          checkboxInput("input_extrema", label = "Add extrema", value = TRUE),
+          checkboxInput("input_average", label = "Add average", value = TRUE),
+          checkboxInput("input_column", label = "Single column", value = FALSE)
+        ),
+        tags$hr(),
+        shinyjs::disabled(
+          selectizeInput(
+            inputId = "input_min_color",
+            label = "Min color:",
+            choices = list_colors,
+            selected = "royalblue"
+          ),
+          selectizeInput(
+            inputId = "input_max_color",
+            label = "Max color:",
+            choices = list_colors,
+            selected = "darkorange"
+          ),
+          selectizeInput(
+            inputId = "input_avg_color",
+            label = "Average color:",
+            choices = list_colors,
+            selected = "darkgreen"
+          )
+        )
+      )
+    ),
+    column(
+      width = 6,
+      box(
+        width = NULL, solidHeader = TRUE, background = "black", status = "primary",
+        title = h3("Visualization"),
+        plotOutput("output_viz", height = "800px")
       )
     )
   )
 )
+)
+    )
+    )
 
 # SERVER ------------------------------------------------------------------
 
@@ -556,16 +593,6 @@ server <- function(session, input, output){
     )
   })
   
-  observeEvent(input$action_pat, {
-      updateSliderInput(
-        session,
-        "input_cap",
-        min = data_full() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
-        max = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
-        value = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
-      )
-  })
-  
   observe({
     updatePickerInput(
       session,
@@ -609,12 +636,38 @@ server <- function(session, input, output){
       )
     }
     
-#     if(input$input_set == 2) {
-#       updateRadioGroupButtons(
-#         input_viz
-#       )
-#     }
+    #     if(input$input_set == 2) {
+    #       updateRadioGroupButtons(
+    #         input_viz
+    #       )
+    #     }
+    updateSliderInput(
+      session,
+      "input_cap",
+      min = dataset() %>% ungroup() %>% select(input$input_var) %>% min(na.rm = TRUE) %>% round() - 1,
+      max = dataset() %>% ungroup() %>% select(input$input_var) %>% max(na.rm = TRUE) %>% round() + 1,
+      value = dataset() %>% ungroup() %>% select(input$input_var) %>% max(na.rm = TRUE) %>% round() + 1
+      # min = min(data_full()$input$input_var, na.rm = TRUE),
+      #         min = data_full() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
+      #       max = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
+      #       value = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
+    )
   })
+  
+#   observe({
+#     # observeEvent(input$action_pat, {
+#     updateSliderInput(
+#       session,
+#       "input_cap",
+#       min = dataset() %>% ungroup() %>% select(input$input_var) %>% min(na.rm = TRUE) %>% round() - 1,
+#       max = dataset() %>% ungroup() %>% select(input$input_var) %>% max(na.rm = TRUE) %>% round() + 1,
+#       value = dataset() %>% ungroup() %>% select(input$input_var) %>% max(na.rm = TRUE) %>% round() + 1
+#       # min = min(data_full()$input$input_var, na.rm = TRUE),
+#       #         min = data_full() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
+#       #       max = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
+#       #       value = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
+#     )
+#   })
   
   observe({
     if(input$input_viz == 1){
@@ -640,13 +693,13 @@ server <- function(session, input, output){
     }
     
     if(input$input_viz == 4){
-      shinyjs::enable("input_sites")
+      # shinyjs::enable("input_sites")
       shinyjs::enable("input_points")
       shinyjs::enable("input_extrema")
       shinyjs::enable("input_average")
       # shinyjs::enable("input_column")
     } else {
-      shinyjs::disable("input_sites")
+      # shinyjs::disable("input_sites")
       shinyjs::disable("input_points")
       shinyjs::disable("input_extrema")
       shinyjs::disable("input_average")
@@ -654,15 +707,21 @@ server <- function(session, input, output){
     }
   })
   
-#   observe({
-#     updateSliderInput(
-#       session,
-#       "input_cap",
-#       min = dataset() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
-#       max = dataset() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
-#       value = dataset() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
-#     )
-#   })
+  observe({
+    if(input$input_extrema == TRUE & input$input_viz == 4){
+      shinyjs::enable("input_min_color")
+      shinyjs::enable("input_max_color")
+    } else {
+      shinyjs::disable("input_min_color")
+      shinyjs::disable("input_max_color")
+    }
+    
+    if(input$input_average == TRUE & input$input_viz == 4){
+      shinyjs::enable("input_avg_color")
+    } else {
+      shinyjs::disable("input_avg_color")
+    }
+  })
   
   ## MAP
   viz_map <- reactive({
@@ -905,7 +964,10 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     } else if(input$input_var == "pm25_lrapa"){
       ts_line(
@@ -918,7 +980,10 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     } else if(input$input_var == "pm25_atm"){
       ts_line(
@@ -931,7 +996,10 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     } else if(input$input_var == "pm25_cf1"){
       ts_line(
@@ -944,7 +1012,10 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     } else if(input$input_var == "temperature_c"){
       ts_line(
@@ -957,7 +1028,10 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     } else if(input$input_var == "temperature"){
       ts_line(
@@ -970,7 +1044,10 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     } else if(input$input_var == "humidity"){
       ts_line(
@@ -983,23 +1060,26 @@ server <- function(session, input, output){
         add_points = input$input_points,
         add_average = input$input_average,
         add_extrema = input$input_extrema,
-        single_column = input$input_column
+        single_column = input$input_column,
+        avg_color = input$input_avg_color,
+        min_color = input$input_min_color,
+        max_color = input$input_max_color
       )
     }
   })
   
   output_plot <- reactive({
-#     if (input$input_viz == 1) {
-#       input_startdate <- input$input_dates[1]
-#       input_enddate <- input$input_dates[2]
-#       viz_map()
-#     }
+    #     if (input$input_viz == 1) {
+    #       input_startdate <- input$input_dates[1]
+    #       input_enddate <- input$input_dates[2]
+    #       viz_map()
+    #     }
     if (input$input_viz == 1) {viz_map()}
     else if (input$input_viz == 2) {viz_heatmap_single()}
     else if (input$input_viz == 3) {viz_heatmap()}
     else if (input$input_viz == 4) {viz_line()}
   })
-
+  
   output$output_viz <- renderPlot({output_plot()})
 }
 
