@@ -641,16 +641,18 @@ server <- function(session, input, output){
     #         input_viz
     #       )
     #     }
+    shinyjs::delay(100, 
     updateSliderInput(
       session,
       "input_cap",
-      min = dataset() %>% ungroup() %>% select(input$input_var) %>% min(na.rm = TRUE) %>% round() - 1,
+      min = dataset() %>% ungroup() %>% select(input$input_var) %>% min(na.rm = TRUE) %>% round(),
       max = dataset() %>% ungroup() %>% select(input$input_var) %>% max(na.rm = TRUE) %>% round() + 1,
       value = dataset() %>% ungroup() %>% select(input$input_var) %>% max(na.rm = TRUE) %>% round() + 1
       # min = min(data_full()$input$input_var, na.rm = TRUE),
-      #         min = data_full() %>% select_if(is.numeric) %>% min(na.rm = TRUE),
-      #       max = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE),
-      #       value = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE)
+      #         min = data_full() %>% select_if(is.numeric) %>% min(na.rm = TRUE) %>% round(),
+      #       max = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE) %>% round() + 1,
+      #       value = data_full() %>% select_if(is.numeric) %>% max(na.rm = TRUE) %>% round() + 1
+    )
     )
   })
   
