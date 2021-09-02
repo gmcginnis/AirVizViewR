@@ -159,8 +159,8 @@ ui <- dashboardPage(
               dateRangeInput(
                 "input_dates",
                 label = "Start and end dates of interest:",
-                # start = "2021-07-01", end = "2021-07-07",
-                start = "2020-07-01", end = "2020-07-07",
+                start = "2021-07-01", end = "2021-07-07",
+                # start = "2020-07-01", end = "2020-07-07",
                 format = "MM d, yyyy"
               ),
               h4("Locations"),
