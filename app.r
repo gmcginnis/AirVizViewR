@@ -101,7 +101,9 @@ ui <- dashboardPage(
                 tags$b(
                   tags$li(tags$a(href="https://neighborsforcleanair.org/", "Neighbors for Clean Air (NCA)")),
                   tags$li(tags$a(href="https://reed.edu/", "Reed College"))
-                )
+                ),
+                tags$li(tags$a(href="https://mmt.org/", "Meyer Memorial Trust")),
+                tags$li(tags$a(href="https://ehsc.oregonstate.edu/pilot", "OSU Pacific Northwest Center for Translational Environmental Health Research Pilot Project Program"))
               ),
               "Special thanks:",
               tags$ul(
@@ -151,8 +153,8 @@ ui <- dashboardPage(
               textInput(
                 "input_coords",
                 label = "Boundary box:",
-                # value = "-122.65, 45.46, -122.60, 45.50"
-                value = "-122.65, 45.48, -122.57, 45.52"
+                value = "-122.65, 45.46, -122.60, 45.50"
+                # value = "-122.65, 45.48, -122.57, 45.52"
                 # value = "-122.854, 45.4, -122.58, 45.6"
               ),
               h4("Dates"),
@@ -222,8 +224,9 @@ ui <- dashboardPage(
             to display the monitors that match the inputs of interest. If there are more than 25 monitors displayed,
             or if your date ranges are quite lengthy, consider applying more filters, as data loading can take a long time.",
             tags$br(),
-            "It should be noted that not all monitors displayed below will report complete data sets.",
-            tags$br(),
+            "If only one monitor is selected, the map will not display, however the data can still be downloaded.",
+#             "It should be noted that not all monitors displayed below will report complete data sets.",
+#             tags$br(),
             plotOutput("output_pasmap", height = "500px"),
             tags$br()
           ),
@@ -442,7 +445,7 @@ server <- function(session, input, output){
     updateDateRangeInput(
       session,
       "input_dates",
-      max = input_startdate + 365
+      max = input_startdate + 61
     )
   })
   
