@@ -1,6 +1,7 @@
 # Libraries
 # remove.packages("AirVizR")
 # devtools::install_github("gmcginnis/AirVizR")
+library(rsconnect)
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)
@@ -21,6 +22,12 @@ list_var <- list(
 )
 
 list_colors <- str_subset(colors(), "[:digit:]", negate = TRUE)
+
+last_update <- dir(getwd(), "app.r", full.names = TRUE) %>%
+  file.mtime() %>%
+  format(., format = "%d %b %Y")
+  # format(., format = "%d %b %Y at %R")
+
 
 # UI ----------------------------------------------------------------------
 
@@ -71,14 +78,13 @@ ui <- dashboardPage(
               width = NULL, solidHeader = TRUE, background = "black", status = "primary", collapsible = TRUE, collapsed = TRUE,
               title = "Disclaimer",
               "The inforamtion displayed on this dashboard is intended for informational and educational purposes only.",
-              HTML("Health effects and weather predictions <b>cannot</b> be extrapolated from these results alone."),
+              HTML("Health effects and weather predictions <i>cannot</i> be extrapolated from these results alone."),
               "The data is subject to change. While correction factors from the EPA and LRAPA are offered as forms of preliminary data validation,
               there is the possibility of faulty data due to erroneous monitor reports.",
               tags$br(),
               HTML("<b>If users should choose to share results from this dashboard,
                    they are responsible for ensuring that all disclaimers of data sources, settings applied</b>
-                   (such as color caps)<b>, and limitations of results are explicitly stated.</b>")
-              )
+                   (such as color caps)<b>, and limitations of results are explicitly stated.</b>"))
               ),
           column(
             width = 4,
@@ -88,6 +94,7 @@ ui <- dashboardPage(
               "This dashboard was created by",
               tags$a(href="https://github.com/gmcginnis", "Gillian McGinnis"),
               "(Reed College '22) in August 2021, and is actively being updated.",
+              paste("Last updated", last_update),
               tags$br(),
               "This dashboard and the code within are open to the public, but if you share results please consider including authorship credit!",
               tags$hr(),
@@ -209,7 +216,7 @@ ui <- dashboardPage(
               tags$br(),
               actionButton(
                 inputId = "action_pasmap",
-                label = "Get PAS!",
+                label = "Generate map of monitors!",
                 icon = icon("hand-point-right"),
                 class = "btn-info"
               )
@@ -219,12 +226,12 @@ ui <- dashboardPage(
           width = 6,
           box(
             width = NULL, solidHeader = TRUE, background = "black", status = "primary",
-            title = "PAS",
-            "Once you have entered inputs and pressed the 'Get PAS' button, a map will appear shortly after
-            to display the monitors that match the inputs of interest. If there are more than 25 monitors displayed,
+            title = "Map of selected monitors",
+            "Once you have entered inputs and pressed the 'Generate map of monitors' button, a map will appear shortly after
+            to display the monitors that match the inputs of interest. If there are more than 25 monitors,
             or if your date ranges are quite lengthy, consider applying more filters, as data loading can take a long time.",
             tags$br(),
-            "If only one monitor is selected, the map will not display, however the data can still be downloaded.",
+            "If only one monitor is selected, the map will not display, but the data can still be loaded.",
 #             "It should be noted that not all monitors displayed below will report complete data sets.",
 #             tags$br(),
             plotOutput("output_pasmap", height = "500px"),
@@ -233,13 +240,13 @@ ui <- dashboardPage(
           box(
             width = NULL, solidHeader = TRUE, background = "black", status = "primary",
             title = "Next steps",
-            "Map look good? Press the button below to load the data!",
+            "If the map looks good, press the button below to load the data!",
             tags$br(),
             shinyjs::useShinyjs(),
             shinyjs::disabled(
               actionButton(
                 inputId = "action_pat",
-                label = "Get PAT!",
+                label = "Get time series data for selected monitors!",
                 icon = icon("hand-point-right"),
                 class = "btn-info"
               )
@@ -266,8 +273,8 @@ tabItem(
           choices = list(
             "Full (maximum granularity)" = 1,
             "Hourly (by day)" = 2,
-            "Daily" = 3
-            # "Diurnal (24 hour cycle)" = 4
+            "Daily" = 3#,
+            #"Diurnal (24 hour cycle)" = 4
           ),
           selected = 2
         ),
@@ -441,6 +448,7 @@ server <- function(session, input, output){
   observe({
     
     input_startdate <- input$input_dates[1]
+    input_enddate <- input$input_dates[2]
     
     updateDateRangeInput(
       session,
@@ -546,7 +554,7 @@ server <- function(session, input, output){
   results <- eventReactive(input$action_pat, {
     withProgress(
       message = "Collecting data!",
-      detail = "This will be the longest step. Yes, the progress bar is slow.",
+      detail = "This will be the longest step. The progress bar is slow.",
       get_area_pat(
         id_list = pat_ids(),
         pas_input = pas_area(),
@@ -819,7 +827,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     } else if(input$input_var == "pm25_lrapa"){
       heatmap_cross(
@@ -828,7 +837,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     } else if(input$input_var == "pm25_atm"){
       heatmap_cross(
@@ -837,7 +847,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     } else if(input$input_var == "pm25_cf1"){
       heatmap_cross(
@@ -846,7 +857,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     } else if(input$input_var == "temperature_c"){
       heatmap_cross(
@@ -855,7 +867,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     } else if(input$input_var == "temperature"){
       heatmap_cross(
@@ -864,7 +877,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     } else if(input$input_var == "humidity"){
       heatmap_cross(
@@ -873,7 +887,8 @@ server <- function(session, input, output){
         location_data = data_meta(),
         drop_incomplete = input$input_drop,
         cap_value = input$input_cap,
-        cap_color = input$input_cap_color
+        # cap_color = input$input_cap_color
+        cap_color = "green"
       )
     }
   })
