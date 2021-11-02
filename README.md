@@ -10,6 +10,9 @@
 
 ☛ Full link: <https://gmcginnis.shinyapps.io/AirVizViewR/>
 
+☛ Alternative link, hosted on the Reed College server:
+<https://shiny.reed.edu/s/users/gmcginnis/AirVizViewR/>
+
 ### Overview
 
 The goal of AirVizViewR is to provide a user-friendly web interface for
@@ -37,21 +40,23 @@ spatio-temporal data set of interest. The larger the set, the longer it
 will take to be loaded. Data limits have been placed in order to prevent
 server overload.
 
-A <i>boundary box</i> using W,S,E,N coordinates in numeric form is
-required. Example: <code>-122.65, 45.46, -122.60, 45.50</code>
-corresponds to a portion of the Portland (OR) metro area.
+A <i>boundary box</i> using W,S,E,N numeric-form coordinates is
+required. For example, <code>-122.65, 45.46, -122.60, 45.50</code>
+corresponds to a portion of the Portland OR metro area.
 
 A <i>date range</i> is also required. It is recommended to keep this
-date range under a month, as the data is downloaded with maximum
+date range under 1 month, as the data is downloaded with maximum
 granularity (which reports every few seconds).
 
-Optionally, only <i>indoor</i> or only <i>outdoor</i> monitors can be
-selected. The default is both.
+Monitors can be selected to be only <i>indoor</i> or only
+<i>outdoor</i>. The default is both.
 
-Another optional input is a <i>label filter</i>, which allows for
-monitors in a specified area to be selected only if they match a
-corresponding string. Example: <code>NCA</code> would filter only for
-monitors who have the term term “NCA” at any point in their name.
+##### Optional inputs
+
+An optional input is a <i>label filter</i>, which allows for monitors in
+a specified area to be selected only if they match a corresponding
+string. For example, <code>NCA</code> would filter only for monitors who
+have the term “NCA” at any point in their name.
 
 Furthermore, if one is selecting an area along state boundaries but
 would only like to download the data from one state, a <i>state code</i>
@@ -76,6 +81,8 @@ Selecting the <i>data</i> to be plotted will change the granularity of
 the values (with the exception of the hourly single heatmap, which will
 only use hourly data). Generally, the higher the granularity (i.e., the
 closer to “full”), the longer the data will take to visualize.
+
+##### Variable information
 
 The <i>variable of interest</i> allows for the selection of the values
 to graph.

@@ -156,7 +156,7 @@ ui <- dashboardPage(
               The easiest way to do so is to visit", tags$a(href="http://bboxfinder.com/", "bboxfinder"),
               "and using the drawing tools on the site to draw a small box of interest.
               At the bottom of the screen will be coordinates labeled",
-              tags$b("'Box'"), "which you can copy and paste below:",
+              tags$b("'Box'"), "which you can copy and paste below.",
               textInput(
                 "input_coords",
                 label = "Boundary box:",
@@ -274,7 +274,7 @@ tabItem(
             "Full (maximum granularity)" = 1,
             "Hourly (by day)" = 2,
             "Daily" = 3#,
-            #"Diurnal (24 hour cycle)" = 4
+            # "Diurnal (24 hour cycle)" = 4
           ),
           selected = 2
         ),
@@ -352,7 +352,7 @@ tabItem(
           )
         ),
         tags$hr(),
-        "Do the streets appear to be fuzzy? Increase the following:",
+        "If the streets appear to be fuzzy, increase the following.",
         shinyjs::disabled(
           sliderInput(
             inputId = "input_zoom",
