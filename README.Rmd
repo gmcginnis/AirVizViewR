@@ -59,13 +59,13 @@ Selecting the <i>data</i> to be plotted will change the granularity of the value
 
 The <i>variable of interest</i> allows for the selection of the values to graph. 
 
-PM<sub>2.5</sub> is Particulate Matter with a diameter $<2.5\ \mu m$.
+PM<sub>2.5</sub> is Particulate Matter with a diameter <2.5 &mu;m.
 
 For PurpleAir values, the different <code>CF</code> codes are the correspond internal average particle density values using one of two mass concentration conversion options: <code>CF=1</code> for indoor PM, and <code>CF=ATM</code> for outdoor PM. Both are available for visualization on the dashboard, regardless of reported monitor location. More information can be found on the [PurpleAir FAQ](https://www2.purpleair.com/community/faq#hc-what-is-the-difference-between-cf-1-and-cf-atm).
 
-Correction factors are incorporated from the [Environmental Protection Agency (EPA)](https://www.epa.gov/) and [Lane Regional Air Protection Agency (LRAPA)](https://www.lrapa.org/) via calculations using the reported PM<sub>2.5</sub>, temperature, and humidity values. Both are available as variables of interest for visualizations. The EPA factor was based on US-wide PurpleAir data and revised in late 2020 to incorporate adjustments for high-PM events (such as forest fires). The LRAPA correction was established in the Pacific Northwest in order to accommodate the unique airshed (the PM of the region is proportionally comprised of more woodsmoke than other areas of the country). It should be noted, however, that the LRAPA correction factor cannot be applied to values $>65\ \mu g/m^3$.
+Correction factors are incorporated from the [Environmental Protection Agency (EPA)](https://www.epa.gov/) and [Lane Regional Air Protection Agency (LRAPA)](https://www.lrapa.org/) via calculations using the reported PM<sub>2.5</sub>, temperature, and humidity values. Both are available as variables of interest for visualizations. The EPA factor was based on US-wide PurpleAir data and revised in late 2020 to incorporate adjustments for high-PM events (such as forest fires). The LRAPA correction was established in the Pacific Northwest in order to accommodate the unique airshed (the PM of the region is proportionally comprised of more woodsmoke than other areas of the country). It should be noted, however, that the LRAPA correction factor cannot be applied to values >65 &mu;g<sup>3</sup>.
 
-In addition to PM, other reported values are available for visualization, using different color palettes in order to provide greater distinction. Reported temperature (in both $\deg C$ and $deg F$) is available, as well as humidity (as a percentage).
+In addition to PM, other reported values are available for visualization, using different color palettes in order to provide greater distinction. Reported temperature (in both &#8451; and &#8457;) is available, as well as humidity (as a percentage).
 
 ##### Map
 

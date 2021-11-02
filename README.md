@@ -80,7 +80,7 @@ closer to “full”), the longer the data will take to visualize.
 The <i>variable of interest</i> allows for the selection of the values
 to graph.
 
-PM<sub>2.5</sub> is Particulate Matter with a diameter  &lt; 2.5 *μ**m*.
+PM<sub>2.5</sub> is Particulate Matter with a diameter &lt;2.5 μm.
 
 For PurpleAir values, the different <code>CF</code> codes are the
 correspond internal average particle density values using one of two
@@ -101,12 +101,12 @@ LRAPA correction was established in the Pacific Northwest in order to
 accommodate the unique airshed (the PM of the region is proportionally
 comprised of more woodsmoke than other areas of the country). It should
 be noted, however, that the LRAPA correction factor cannot be applied to
-values  &gt; 65 *μ**g*/*m*<sup>3</sup>.
+values &gt;65 μg<sup>3</sup>.
 
 In addition to PM, other reported values are available for
 visualization, using different color palettes in order to provide
-greater distinction. Reported temperature (in both deg *C* and
-*d**e**g**F*) is available, as well as humidity (as a percentage).
+greater distinction. Reported temperature (in both ℃ and ℉) is
+available, as well as humidity (as a percentage).
 
 ##### Map
 
