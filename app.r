@@ -9,7 +9,7 @@ library(tidyverse)
 library(AirVizR)
 library(stringr)
 # library(DT)
-# library(AirSensor)
+library(AirSensor)
 
 list_var <- list(
   "PM2.5 (EPA corrected)" = "pm25_epa_2021",

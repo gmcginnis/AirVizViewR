@@ -5,7 +5,7 @@ account: gmcginnis
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5019912
-bundleId: 5204357
+bundleId: 5217240
 url: https://gmcginnis.shinyapps.io/airvizviewr/
-when: 1635883980.98102
-lastSyncTime: 1635883980.98106
+when: 1636114085.41061
+lastSyncTime: 1636114085.41071
